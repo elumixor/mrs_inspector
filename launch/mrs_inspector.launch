@@ -1,0 +1,22 @@
+<launch>
+    <!-- Arguments -->
+    <arg name="obstacles_file" default="$(find mrs_inspector)/resources/obstacles.asc" />
+    <arg name="world_bounds_file" default="$(find mrs_inspector)/resources/world_bounds.yaml" />
+    <arg name="viewpoint_distance" default="4.0" />
+    <!-- <arg name="safety_distance" default="2.0" /> -->
+    <!-- <arg name="rrt_timeout" default="10.0" /> -->
+    <!-- <arg name="rrt_inflation" default="0.2" /> -->
+
+    <node pkg="mrs_inspector" name="mrs_inspector" type="node.py" output="screen">
+        <!-- Configuration for the planner -->
+        <!-- <rosparam file="$(find inspector)/config/config.yaml" command="load" /> -->
+
+        <!-- Obstacles file path parameter -->
+        <param name="obstacles_file" value="$(arg obstacles_file)" />
+        <param name="world_bounds_file" value="$(arg world_bounds_file)" />
+        <param name="viewpoint_distance" value="$(arg viewpoint_distance)" />
+        <!-- <param name="safety_distance" value="$(arg safety_distance)" /> -->
+        <!-- <param name="rrt_timeout" value="$(arg rrt_timeout)" /> -->
+        <!-- <param name="rrt_inflation" value="$(arg rrt_inflation)" /> -->
+    </node>
+</launch>

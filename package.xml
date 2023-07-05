@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<package format="2">
+
+  <name>mrs_inspector</name>
+  <version>0.0.0</version>
+
+  <description>
+    ROS node with an action server, that takes:
+      - Array of inspection points (IPs) - (x, y, z, heading)
+      - Path to the point cloud with obstacles
+
+    /mrs_inspector/plan
+
+    and publishes the trajectory following commands. UAV can subscribe to the topic to follow it.
+
+    /mrs_inspector/trajectory/uav[index]
+
+    The feedback includes the current progress, the last and the next IPs (indices).
+  </description>
+
+  <author email="vladogim97@gmail.com">elumixor</author>
+  <maintainer email="vladogim97@gmail.com">elumixor</maintainer>
+
+  <license>BSD-3</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>roscpp</depend>
+  <depend>rospy</depend>
+  <depend>std_msgs</depend>
+  <depend>message_runtime</depend>
+  <depend>message_generation</depend>
+  <depend>actionlib_msgs</depend>
+  <depend>mavros_msgs</depend>
+
+</package>

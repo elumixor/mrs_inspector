@@ -1,0 +1,9 @@
+# Request
+mrs_inspector/InspectionPoint[] points
+mrs_inspector/Start[] starts # For each UAV
+---
+# Result
+bool success
+---
+# Progress
+float32 progress
