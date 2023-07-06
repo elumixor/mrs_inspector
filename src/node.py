@@ -4,6 +4,7 @@ import rospy
 
 from mrs_inspector.msg import InspectAction, InspectResult
 from mrs_msgs.msg import TrajectoryReference, Reference
+from mrs_msgs.srv import TrajectoryReferenceSrv
 from geometry_msgs.msg import Point
 from std_msgs.msg import Header
 
@@ -27,6 +28,8 @@ class InspectorNode(ActionServer):
 
         # Create the publishers of trajectories. We'll change them on each new request
         self.publishers: dict[int, rospy.Publisher] = {}
+        # Create the services to call the control manager
+        self.services: dict[int, rospy.ServiceProxy] = {}
 
         rospy.loginfo("Initialization done. Waiting for requests")
 
@@ -46,9 +49,18 @@ class InspectorNode(ActionServer):
         for publisher in self.publishers.values():
             publisher.unregister()
 
+        # Remove the old services
+        for service in self.services.values():
+            service.close()
+
         # For each UAV, create a publisher for the trajectory
         self.publishers = {
-            uav: rospy.Publisher(f"~trajectory/uav{uav}", TrajectoryReference, queue_size=1, latch=True)
+            uav: rospy.Publisher(f"~uav{uav}/inspector/trajectory", TrajectoryReference, queue_size=1, latch=True)
+            for uav in uavs
+        }
+        # For each UAV, create a service proxy to call the control manager
+        self.services = {
+            uav: rospy.ServiceProxy(f"uav{uav}/control_manager/trajectory_reference", TrajectoryReferenceSrv)
             for uav in uavs
         }
 
@@ -64,14 +76,27 @@ class InspectorNode(ActionServer):
         rospy.loginfo("Collisions resolved. Publishing trajectories...")
 
         # Publish the trajectories
+        trajectories = {}
         for uav, trajectory in trajectories_by_uav.items():
             header = Header()
             header.stamp = rospy.Time.now()
             points = [Reference(Point(*p.position), p.heading) for p in trajectory]
-            trajectory = TrajectoryReference(header=header, points=points)
+            trajectories[uav] = TrajectoryReference(header=header,
+                                                    points=points,
+                                                    dt=0.2,
+                                                    fly_now=True,
+                                                    use_heading=True)
+
+        for uav, trajectory in trajectories.items():
             self.publishers[uav].publish(trajectory)
 
         rospy.loginfo("Trajectories published and latched.")
+
+        # Perform calls to the uav{id}/control_manager/trajectory_reference
+        for uav, trajectory in trajectories.items():
+            self.services[uav](trajectory)
+
+        rospy.loginfo("Trajectories sent to control manager.")
 
         # Return the result
         return InspectResult(success=True)

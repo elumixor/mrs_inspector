@@ -1,6 +1,7 @@
 # Request
 mrs_inspector/InspectionPoint[] points
 mrs_inspector/Start[] starts # For each UAV
+# float32 inspection_distance # todo - add this
 ---
 # Result
 bool success
