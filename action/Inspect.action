@@ -1,7 +1,11 @@
 # Request
 mrs_inspector/InspectionPoint[] points
-mrs_inspector/Start[] starts # For each UAV
-# float32 inspection_distance # todo - add this
+uint32[] uav_ids
+float32 safety_distance
+float32 inspection_distance # Distance from the UAV to the inspection point
+float32 dt # Time step for trajectories
+float32 stop_duration # Time to stop at each inspection point
+bool return_to_start # Return to the starting point after the inspection
 ---
 # Result
 bool success

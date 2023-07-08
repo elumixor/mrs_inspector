@@ -1,7 +1,7 @@
 import numpy as np
-from typing import NamedTuple
+from typing import NamedTuple, Union
 
-Node = NamedTuple("Node", [("point", tuple), ("parent", np.ndarray), ("cost", float)])
+Node = NamedTuple("Node", [("point", np.ndarray), ("parent", Union[np.ndarray, None]), ("cost", float)])
 
 
 class Tree:
@@ -14,7 +14,7 @@ class Tree:
     def __iter__(self):
         return iter(self.nodes.keys())
 
-    def add_node(self, point: np.ndarray, parent: np.array, cost: float):
+    def add_node(self, point: np.ndarray, parent: np.ndarray, cost: float):
         self.nodes[tuple(point)] = Node(point, parent, cost)
 
     def find_path(self, end: np.ndarray):

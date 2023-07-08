@@ -22,7 +22,7 @@ class InspectorClientNode:
             ),
             InspectionPoint(
                 id=2,
-                position=Point(1, 0, 0.5),
+                position=Point(1, 1, 0.5),
                 heading=0,
                 possible_uavs=[1, 2]
             ),
@@ -33,20 +33,16 @@ class InspectorClientNode:
                 possible_uavs=[1]
             ),
         ]
-        starts = [
-            Start(
-                id=1,
-                position=Point(0, 0, 0.5),
-                heading=0
-            ),
-            Start(
-                id=2,
-                position=Point(3, 3, 0.5),
-                heading=0
-            ),
-        ]
 
-        goal = InspectGoal(points=points, starts=starts)
+        goal = InspectGoal(
+            points=points,
+            uav_ids=[1, 2],
+            dt=0.2,
+            inspection_distance=2.0,
+            safety_distance=1.0,
+            stop_duration=1.0,
+            return_to_start=True,
+        )
         self.client.send_goal(goal)
         self.client.wait_for_result()
         result = self.client.get_result()

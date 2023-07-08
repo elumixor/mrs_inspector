@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import rospy
 import numpy as np
 from sklearn.cluster import KMeans
@@ -5,12 +7,15 @@ from sklearn.cluster import KMeans
 from mrs_inspector.msg import InspectionPoint
 
 
-def assign_viewpoints(points, starts):
+def assign_viewpoints(points: list[InspectionPoint],
+                      starts: dict[int, tuple[float, float, float, float] | None]) -> dict[int, list[InspectionPoint]]:
     viewpoints_by_uav = {
         # Create a list with the starting point only for now
         # (id is not really needed, but just to keep the coherent structure)
-        start.id: [InspectionPoint(-1, start.position, start.heading, [start.id])]
-        for start in starts
+        uav_id: [
+            InspectionPoint(id=-1, position=start[:3], heading=start[3], possible_uavs=[uav_id])
+            if start is not None else None
+        ] for uav_id, start in starts.items()
     }
     # IPs that can be inspected by multiple UAVs
     not_clustered = []
@@ -28,19 +33,30 @@ def assign_viewpoints(points, starts):
 
     # Apply K-means clustering to separate the IPs
     rospy.loginfo(f"{len(not_clustered)} viewpoints to be clustered")
-    clusters = cluster_vps(not_clustered, k=len(starts), assigned=[len(points) for points in viewpoints_by_uav.values()])
+    ids = list(viewpoints_by_uav.keys())
+    clusters = cluster_vps(not_clustered, k=len(starts), assigned=[len(viewpoints_by_uav[id]) for id in ids])
 
     # Add the clusters to the corresponding UAVs
-    for i, cluster in enumerate(clusters):
-        viewpoints_by_uav[starts[i].id] += cluster
+    for id, cluster in zip(ids, clusters):
+        viewpoints_by_uav[id] += cluster
+
+    # If there are no viewpoints for some UAV, we should remove it from the dict
+    for id in ids:
+        viewpoints = viewpoints_by_uav[id]
+        if len(viewpoints) <= 1:
+            rospy.logwarn(f"UAV {id} has no viewpoints to inspect")
+            del viewpoints_by_uav[id]
+        elif viewpoints[0] is None:
+            # If the starting point is None, then we should remove it as it wil lbe the same as the first VP
+            viewpoints.pop(0)
 
     # Log the assigned viewpoints' indices
     viewpoints_str = ""
     for uav_id, viewpoints in viewpoints_by_uav.items():
-        viewpoints_str += f"\n\tUAV {uav_id}: {[vp.id for vp in viewpoints[1:]]}"
+        viewpoints_str += f"\n\tUAV {uav_id}: {[vp.id for vp in viewpoints]}"  # type: ignore
     rospy.loginfo(f"Assigned viewpoints: {viewpoints_str}")
 
-    return viewpoints_by_uav
+    return viewpoints_by_uav  # type: ignore
 
 
 def cluster_vps(viewpoints, k, assigned):

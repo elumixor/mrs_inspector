@@ -51,6 +51,8 @@ def rrt(start: InspectionPoint,
     start = np.array([start.x, start.y, start.z])
     end = end.position
     end = np.array([end.x, end.y, end.z])
+    if np.allclose(start, end):
+        return [start], 0.0
 
     # Return immediately if start and end are in the obstacle space
     if start not in free_space:
