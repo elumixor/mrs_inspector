@@ -1,21 +1,29 @@
 import os
 import tempfile
 import shutil
+from rospkg import RosPack
+
+import rospy
 
 
-# We need to use CMake add_custom_command() to download and `make` the LKH solver
-LKH_CMD = "/opt/LKH-2.0.10/LKH"  # Path to the LKH solver's executable
-LKH_FILES = "/tmp/LKH_files"   # Path to the temporary files directory
+__lkh_version = "2.0.10"
+__lkh_installed = False
+__lkh_path = None
+__lkh_dir = None
+__lkh_files = "/tmp/LKH_files"   # Path to the temporary files directory
 
 
 def lkh(distances, silent=True):
+    # Ensure LKH solver is installed
+    __ensure_lkh()
+
     # Generate a random filename in the /tmp/LKH_files folder
-    if os.path.exists(LKH_FILES):
-        shutil.rmtree(LKH_FILES)
+    if os.path.exists(__lkh_files):
+        shutil.rmtree(__lkh_files)
 
-    os.makedirs(LKH_FILES)
+    os.makedirs(__lkh_files)
 
-    with tempfile.NamedTemporaryFile(dir=LKH_FILES) as f:
+    with tempfile.NamedTemporaryFile(dir=__lkh_files) as f:
         filename = f.name
 
     # Write the problem file
@@ -48,7 +56,7 @@ def lkh(distances, silent=True):
                 f"TOUR_FILE = {filename}.txt\n")
 
     # Run the LKH executable
-    os.system(f"{LKH_CMD} {filename}.par" + (" > /dev/null" if silent else ""))
+    os.system(f"{__lkh_path} {filename}.par" + (" > /dev/null" if silent else ""))
 
     # Read the result
     with open(f"{filename}.txt", "r") as f:
@@ -69,3 +77,40 @@ def lkh(distances, silent=True):
     # shutil.rmtree(LKH_FILES)
 
     return sequence
+
+
+# This is not how it should be, but I'm not sure how to install it with catkin/cmake
+def __ensure_lkh():
+    global __lkh_installed, __lkh_path, __lkh_dir
+    if __lkh_path is None:
+        __lkh_dir = os.path.join(RosPack().get_path("mrs_inspector"), "resources/lkh")
+        __lkh_path = os.path.join(__lkh_dir, f"LKH-{__lkh_version}/LKH")
+        __lkh_installed = os.path.exists(__lkh_path)
+
+    # Install LKH if it is not installed
+    if not __lkh_installed:
+        rospy.logwarn("LKH is not installed. Installing it now.")
+
+        os.makedirs(__lkh_dir, exist_ok=True)  # type: ignore
+
+        # Download the tarball
+        rospy.loginfo("Downloading LKH")
+        os.system(f"wget -O {__lkh_dir}/LKH-2.0.10.tgz http://akira.ruc.dk/~keld/research/LKH/LKH-{__lkh_version}.tgz")
+
+        # Extract the tarball
+        rospy.loginfo("Extracting LKH")
+        os.system(f"tar -xzf {__lkh_dir}/LKH-2.0.10.tgz -C {__lkh_dir}")
+
+        # Compile the LKH
+        rospy.loginfo("Compiling LKH")
+        os.system(f"make -C {__lkh_dir}/LKH-2.0.10")
+
+        # Remove the tarball
+        rospy.loginfo("Removing LKH tarball")
+        os.system(f"rm {__lkh_dir}/LKH-2.0.10.tgz")
+
+        # Check if all went well
+        __lkh_installed = os.path.exists(__lkh_path)
+
+        if not __lkh_installed:
+            raise RuntimeError("Could not install LKH")
