@@ -1,0 +1,99 @@
+name: my-stuff
+root: ./
+startup_window: "mrim"
+pre_window: "export UAV_TYPE=m690;
+  export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:~/user_ros_workspace/gazebo_models;
+  export SENSORS=garmin_down;
+  export ODOMETRY_TYPE=gps"
+
+windows:
+  - roscore+status:
+      layout: tiled
+      panes:
+        - roscore
+        - waitForSimulation; roslaunch mrs_uav_status status.launch
+
+  - simulation (gazebo):
+      layout: tiled
+      panes:
+        - "waitForRos; roslaunch mrs_simulation simulation.launch
+          world_file:=$HOME/user_ros_workspace/tmux_scripts/simulation_example/world.world
+          gui:=true"
+
+        # This one maybe we don't need, it snaps the camera to the drone, essentially
+        # - waitForOdometry; gz camera -c gzclient_camera -f uav1; history -s gz camera -c gzclient_camera -f uav1
+
+  - spawn+takeoff:
+      layout: tiled
+      panes:
+        - waitForSimulation; rosservice call /mrs_drone_spawner/spawn "1 $UAV_TYPE \
+          --enable-realsense-front \
+          --enable-basler-camera-down \
+          --enable-thermal-camera \
+          --enable-rangefinder \
+          --enable-ouster --ouster-model OS0-128 --use-gpu-ray \
+          --pos 0 0 1.0 0"
+        - "waitForControl;
+          rosservice call /$UAV_NAME/control_manager/motors 1;
+          rosservice call /$UAV_NAME/mavros/cmd/arming 1;
+          rosservice call /$UAV_NAME/mavros/set_mode 0 offboard;
+          rosservice call /$UAV_NAME/uav_manager/takeoff"
+
+  - control:
+      layout: tiled
+      panes:
+        - waitForOdometry; roslaunch mrs_uav_general core.launch
+
+  # - rviz:
+  #     layout: tiled
+  #     panes:
+  #       - waitForControl; rviz -d ./rviz.rviz
+  #       - waitForControl; roslaunch mrs_rviz_plugins load_robot.launch
+
+  # - octopmap:
+  #     layout: tiled
+  #     panes:
+  #       - waitForOdometry; roslaunch octomap_mapping_planning mapplan.launch \
+  #         config_octomap:=./custom_configs/octomap.yaml \
+  #         config_pcl_filter_ouster:=./custom_configs/ouster_filter_mapping.yaml \
+  #         config_pathfinder:=./custom_configs/pathfinder.yaml \
+  #         config_trajectory_generation:=./custom_configs/trajectory_generation.yaml \
+  #         config_pcl_filter_rs_front:=./custom_configs/rs_front_filter.yaml \
+  #         config_pcl_filter_rs_down:=./custom_configs/rs_down_filter.yaml
+
+  # MRIM planning stuff
+  - mrim (state machine):
+      layout: even-horizontal
+      panes:
+        - "waitForOdometry; roslaunch mrim_state_machine simulation.launch"
+
+  - mrim (planner):
+      layout: even-vertical
+      panes:
+        - "waitForOdometry;
+          roslaunch mrim_planner planner.launch;
+          rostopic pub /mrim_manager/trajectories_valid std_msgs/Bool \"data: true\"" # Temporary solution to force trajectory validity
+
+  - mrim (start!):
+        # - start_planning:
+      layout: even-vertical
+      synchronize: after
+      panes:
+        # - "history -s rosservice call /$UAV_NAME/mrim_state_machine/start"
+        - "print -s rosservice call /$UAV_NAME/mrim_state_machine/start" # To trigger the start
+
+  # - tf_connector: # is this needed ???
+  #   layout: even-vertical
+  #   panes:
+  #     - export UAV_NAME=uav1; waitForOdometry; roslaunch mrim_state_machine tf_connector.launch RUN_TYPE:=simulation
+
+  # - my-action-server:
+  #     layout: tiled
+  #     panes:
+  #       - 'history -s rosservice call /$UAV_NAME/pathfinder/goto \"goal: \[60.0, 0.0, 2.5, 0.0\]\";
+  #         history -s rosservice call /$UAV_NAME/pathfinder/goto \"goal: \[-60.0, 0.0, 2.5, 0.0\]\"'
+
+  # - my-action-client:
+  #    layout: tiled
+  #    panes:
+  #     - 'history -s rosservice call /$UAV_NAME/pathfinder/goto \"goal: \[60.0, 0.0, 2.5, 0.0\]\";

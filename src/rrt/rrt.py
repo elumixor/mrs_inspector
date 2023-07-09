@@ -4,7 +4,8 @@ import time
 
 from mrs_inspector.msg import InspectionPoint
 
-from utils import FreeSpace, ActionError
+from utils import ActionError
+from free_space import FreeSpace
 
 from .tree import Tree
 
@@ -47,10 +48,10 @@ def rrt(start: InspectionPoint,
         first, second = path[:i+1], path[i:]
         return straighten_path(first)[:-1] + straighten_path(second)
 
-    start = start.position
-    start = np.array([start.x, start.y, start.z])
-    end = end.position
-    end = np.array([end.x, end.y, end.z])
+    start = start.position  # type: ignore
+    start: np.ndarray = np.array([start.x, start.y, start.z])  # type: ignore
+    end = end.position  # type: ignore
+    end: np.ndarray = np.array([end.x, end.y, end.z])  # type: ignore
     if np.allclose(start, end):
         return [start], 0.0
 

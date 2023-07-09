@@ -17,7 +17,7 @@ class InspectorClientNode:
             InspectionPoint(
                 id=1,
                 position=Point(0, 0, 0.5),
-                heading=0,
+                heading=5,
                 possible_uavs=[1]
             ),
             InspectionPoint(

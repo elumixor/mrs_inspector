@@ -1,14 +1,18 @@
+from __future__ import annotations
+
 import numpy as np
 
 from mrs_inspector.msg import InspectionPoint
 
 from rrt import rrt
-from utils import ActionError, FreeSpace
+from utils import ActionError
+from free_space import FreeSpace
 
 from .lkh import lkh
 
 
-def solve_single_tsp(viewpoints: "list[InspectionPoint]", free_space: FreeSpace):
+def solve_single_tsp(viewpoints: "list[InspectionPoint]",
+                     free_space: FreeSpace) -> list[tuple[float, float, float, float | None]]:
     n = len(viewpoints)
     distances = np.zeros((n, n))
     paths = {}

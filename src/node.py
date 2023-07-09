@@ -4,7 +4,7 @@ from __future__ import annotations
 import rospy
 from tf.transformations import euler_from_quaternion
 
-from mrs_inspector.msg import InspectAction, InspectResult
+from mrs_inspector.msg import InspectAction, InspectGoal, InspectResult
 from mrs_msgs.msg import TrajectoryReference, Reference, UavState
 from mrs_msgs.srv import TrajectoryReferenceSrv
 from geometry_msgs.msg import Point
@@ -12,7 +12,9 @@ from std_msgs.msg import Header
 
 from tsp import solve_tsp
 from trajectories import sample_trajectory, resolve_collisions
-from utils import ActionServer, ActionError, FreeSpace, ip2vp
+from utils import ActionServer, ActionError, ip2vp
+from free_space import FreeSpace
+from visualization import visualize_space, visualize_goal, visualize_tsp, visualize_trajectories
 
 
 class InspectorNode(ActionServer):
@@ -30,10 +32,18 @@ class InspectorNode(ActionServer):
         # Create the services to call the control manager
         self.services: dict[int, rospy.ServiceProxy] = {}
 
+        # Publish the world bounds and obstacles to the RViz
+        visualize_space(self.free_space)
+
         rospy.loginfo("Initialization done. Waiting for requests")
 
-    def on_request(self, goal):
+    def on_request(self, goal: InspectGoal):
         """Handler of the only request of this node"""
+
+        # Update visualizations
+        visualize_goal(goal)
+        visualize_space(self.free_space)
+
         points, uav_ids, dt, safety_distance, inspection_distance, return_to_start = self._process_request(goal)
 
         num_points = len(points)
@@ -63,11 +73,20 @@ class InspectorNode(ActionServer):
         rospy.loginfo(f"Request received ({num_points} inspection points, {num_uavs} uavs). Solving TSP...")
         points_by_uav = solve_tsp(points, starts, self.free_space, inspection_distance, return_to_start)
 
+        # Visualize trajectories
+        visualize_tsp(points_by_uav)
+
         rospy.loginfo("TSP solved. Solving trajectories...")
         trajectories_by_uav = {uav: sample_trajectory(points, dt=dt) for uav, points in points_by_uav.items()}
 
+        # Visualize trajectories
+        visualize_trajectories(trajectories_by_uav)
+
         rospy.loginfo("Trajectories solved. Resolving collisions...")
         trajectories_by_uav = resolve_collisions(trajectories_by_uav, dt=dt, safety_distance=safety_distance)
+
+        # Visualize trajectories
+        visualize_trajectories(trajectories_by_uav)
 
         rospy.loginfo("Collisions resolved. Publishing trajectories...")
 

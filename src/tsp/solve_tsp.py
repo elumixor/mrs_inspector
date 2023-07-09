@@ -4,7 +4,8 @@ import rospy
 
 from mrs_inspector.msg import InspectionPoint
 
-from utils import ip2vp, FreeSpace
+from utils import ip2vp
+from free_space import FreeSpace
 
 from .assign_viewpoints import assign_viewpoints
 from .solve_single_tsp import solve_single_tsp
@@ -28,7 +29,7 @@ def solve_tsp(points: list[InspectionPoint],
                 vps.append(vps[0])
 
     # Solve TSP for each UAV separately
-    sequences = {}
+    sequences: dict[int, list[tuple[float, float, float, float | None]]] = {}
     for uav_id, vps in vps_by_uav.items():
         message = f"Solving TSP for UAV {uav_id}. Viewpoints:"
         for vp in vps:

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import numpy as np
 from typing import NamedTuple, Union
 
@@ -6,7 +8,7 @@ Node = NamedTuple("Node", [("point", np.ndarray), ("parent", Union[np.ndarray, N
 
 class Tree:
     def __init__(self, root: np.ndarray):
-        self.nodes = {tuple(root): Node(root, None, 0)}
+        self.nodes: dict[tuple[float, float, float], Node] = {tuple(root): Node(root, None, 0)}
 
     def __getitem__(self, point: np.ndarray):
         return self.nodes[tuple(point)]

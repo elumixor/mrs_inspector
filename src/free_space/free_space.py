@@ -5,6 +5,9 @@ from sklearn.neighbors import KDTree
 from mrs_inspector.msg import InspectionPoint, Start
 from geometry_msgs.msg import Point
 
+from .read_dae import read_dae
+from .read_asc import read_asc
+
 
 class FreeSpace:
     def __init__(self, obstacles_filepath: str, bounds_filepath: str, safety_distance=2.0):
@@ -15,14 +18,15 @@ class FreeSpace:
         self.min_y, self.max_y = bounds["y"]
         self.min_z, self.max_z = bounds["z"]
 
-        # setup KD tree for collision queries
-        obstacles = []
-        with open(obstacles_filepath, "r") as f:
-            for line in f:
-                obstacle = np.array([float(n) for n in line.strip().split()])
-                obstacles.append(obstacle)
+        if obstacles_filepath.endswith(".dae"):
+            self.obstacles = read_dae(obstacles_filepath)
+        elif obstacles_filepath.endswith(".asc"):
+            self.obstacles = read_asc(obstacles_filepath)
+        else:
+            raise RuntimeError(f"Unknown file type: {obstacles_filepath}")
 
-        self.kd_tree = KDTree(np.array(obstacles))
+        # setup KD tree for collision queries
+        self.kd_tree = KDTree(self.obstacles)
         self.safety_distance = safety_distance
 
     def __contains__(self, point):

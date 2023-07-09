@@ -6,10 +6,10 @@ from mrs_inspector.msg import InspectionPoint
 from geometry_msgs.msg import Point
 
 
-def ip2vp(ip: InspectionPoint, vp_distance: float):
+def ip2vp(ip: InspectionPoint, inspection_distance: float):
     """Converts InspectionPoint that needs to be inspected to a viewpoint (position and orientation of the UAV)"""
-    x = ip.position.x + vp_distance * np.cos(ip.heading)
-    y = ip.position.y + vp_distance * np.sin(ip.heading)
+    x = ip.position.x + inspection_distance * np.cos(ip.heading)
+    y = ip.position.y + inspection_distance * np.sin(ip.heading)
     z = ip.position.z
     position = Point(x, y, z)
 

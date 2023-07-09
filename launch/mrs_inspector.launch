@@ -1,6 +1,7 @@
 <launch>
     <!-- Arguments -->
-    <arg name="obstacles_file" default="$(find mrs_inspector)/resources/obstacles.asc" />
+    <!-- <arg name="obstacles_file" default="$(find mrs_inspector)/resources/obstacles.asc" /> -->
+    <arg name="obstacles_file" default="$(find mrs_inspector)/resources/models/Towers/meshes/towers.dae" />
     <arg name="world_bounds_file" default="$(find mrs_inspector)/resources/world_bounds.yaml" />
     <arg name="viewpoint_distance" default="4.0" />
     <!-- <arg name="safety_distance" default="2.0" /> -->
