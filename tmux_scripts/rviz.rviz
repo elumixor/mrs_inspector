@@ -69,13 +69,13 @@ Visualization Manager:
       Queue Size: 1
       Value: true
     - Class: rviz/Marker
-      Enabled: true
+      Enabled: false
       Marker Topic: /rviz/mrs_inspector/obstacles
       Name: Obstacles
       Namespaces:
-        points: true
+        {}
       Queue Size: 100
-      Value: true
+      Value: false
     - Class: rviz/Marker
       Enabled: true
       Marker Topic: /rviz/mrs_inspector/inspection_points
@@ -240,7 +240,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 221.8194122314453
+      Distance: 19.217395782470703
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -248,17 +248,17 @@ Visualization Manager:
         Value: false
       Field of View: 0.7853981852531433
       Focal Point:
-        X: 2.4925131797790527
-        Y: -1.5077571868896484
-        Z: 0.008731331676244736
+        X: 2.905228853225708
+        Y: 4.282691955566406
+        Z: 0.08661961555480957
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.4047967195510864
+      Pitch: 0.2397967129945755
       Target Frame: <Fixed Frame>
-      Yaw: 3.7853739261627197
+      Yaw: 4.065370559692383
     Saved: ~
 Window Geometry:
   Displays:
